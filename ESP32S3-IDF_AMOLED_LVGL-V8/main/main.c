@@ -34,22 +34,22 @@ static SemaphoreHandle_t lvgl_mux = NULL;
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 // 鱼鹰光电屏幕验证底板
-#define EXAMPLE_PIN_NUM_LCD_CS            (GPIO_NUM_40)
-#define EXAMPLE_PIN_NUM_LCD_PCLK          (GPIO_NUM_21) 
-#define EXAMPLE_PIN_NUM_LCD_DATA0         (GPIO_NUM_47)
-#define EXAMPLE_PIN_NUM_LCD_DATA1         (GPIO_NUM_45)
-#define EXAMPLE_PIN_NUM_LCD_DATA2         (GPIO_NUM_38)
-#define EXAMPLE_PIN_NUM_LCD_DATA3         (GPIO_NUM_39)
-#define EXAMPLE_PIN_NUM_LCD_RST           (GPIO_NUM_41)
+#define EXAMPLE_PIN_NUM_LCD_CS            (GPIO_NUM_3)
+#define EXAMPLE_PIN_NUM_LCD_PCLK          (GPIO_NUM_15)
+#define EXAMPLE_PIN_NUM_LCD_DATA0         (GPIO_NUM_16)
+#define EXAMPLE_PIN_NUM_LCD_DATA1         (GPIO_NUM_17)
+#define EXAMPLE_PIN_NUM_LCD_DATA2         (GPIO_NUM_18)
+#define EXAMPLE_PIN_NUM_LCD_DATA3         (GPIO_NUM_8)
+#define EXAMPLE_PIN_NUM_LCD_RST           (GPIO_NUM_46)
 
 #define EXAMPLE_USE_TOUCH               1
 
 #if EXAMPLE_USE_TOUCH
 // ESP32S3_AMOLED_触摸
-#define EXAMPLE_PIN_NUM_TOUCH_SCL         (GPIO_NUM_2 )
-#define EXAMPLE_PIN_NUM_TOUCH_SDA         (GPIO_NUM_1 )
+#define EXAMPLE_PIN_NUM_TOUCH_SCL         (GPIO_NUM_10)
+#define EXAMPLE_PIN_NUM_TOUCH_SDA         (GPIO_NUM_11)
 #define EXAMPLE_PIN_NUM_TOUCH_RST         (GPIO_NUM_13)
-#define EXAMPLE_PIN_NUM_TOUCH_INT         (GPIO_NUM_14)
+#define EXAMPLE_PIN_NUM_TOUCH_INT         (GPIO_NUM_12)
 #endif
 
 #define CST816_ID   1
@@ -72,7 +72,7 @@ static SemaphoreHandle_t lvgl_mux = NULL;
 #define AM200Q460460LK_200_460x460   6
 
 // 设置当前屏幕尺寸
-#define CURRENT_SCREEN_SIZE AM178Q368448LK_178_368x448 // 在这里选择屏幕尺寸
+#define CURRENT_SCREEN_SIZE AM200Q460460LK_200_460x460 // 在这里选择屏幕尺寸
 
 #if CURRENT_SCREEN_SIZE == AM196Q410502LK_196_410x502
   #define EXAMPLE_LCD_H_RES              410
@@ -195,7 +195,7 @@ static SemaphoreHandle_t lvgl_mux = NULL;
   #define EXAMPLE_LCD_X_GAP              0
   #define EXAMPLE_LCD_Y_GAP              0
   #define TOUCH_IC_CONFIG                CST820_ID
-  #define AMOLED_QSPI_MAX_PCLK           40 * 1000 * 1000
+  #define AMOLED_QSPI_MAX_PCLK           20 * 1000 * 1000
   static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
     {0xFE, (uint8_t []){0x00}, 1, 0},
     {0x11, (uint8_t []){0x00}, 0, 120},// 退出睡眠模式
@@ -421,7 +421,7 @@ void app_main(void)
     // 在打开屏幕或背光之前，用户可以将预定义的图案刷新到屏幕上
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
     // 设置屏幕亮度
-    ESP_ERROR_CHECK(panel_qspi_amoled_set_brightness(panel_handle, 0xFF)); // 设置亮度为 15
+    ESP_ERROR_CHECK(panel_qspi_amoled_set_brightness(panel_handle, 0x60)); // 设置亮度为 15
 
 #if EXAMPLE_USE_TOUCH
     ESP_LOGI(TAG, "Initialize I2C bus");
