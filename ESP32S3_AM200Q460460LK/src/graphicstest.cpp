@@ -62,7 +62,7 @@ void setup()
   Serial.println("Arduino_GFX PDQgraphicstest example!");
 
   // Init Display
-  if (!gfx->begin(10*1000*1000))
+  if (!gfx->begin(2*1000*1000))
   // if (!gfx->begin(80000000)) /* specify data bus speed */
   {
     Serial.println("gfx->begin() failed!");
@@ -89,7 +89,7 @@ void setup()
   cy1 = cy - 1;
   cn = min(cx1, cy1);
   cn1 = cn - 1;
-  tsa = ((w <= 176) || (h <= 160)) ? 1 : (((w <= 240) || (h <= 240)) ? 2 : 3); // text size A
+  tsa = ((w <= 176) || (h <= 160)) ? 1 : (((w <= 240) || (h <= 240)) ? 2 : 4); // text size A
   tsb = ((w <= 272) || (h <= 220)) ? 1 : 2;                                    // text size B
   tsc = ((w <= 220) || (h <= 220)) ? 1 : 2;                                    // text size C
   ds = (w <= 160) ? 9 : ((w <= 280) ? 10 : 12);                                // digit size
