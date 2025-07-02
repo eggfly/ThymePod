@@ -73,9 +73,23 @@
 #define SCREEN_WIDTH 460
 #define SCREEN_HEIGHT 460
 
+
+#define AMOLED_CS 3
+#define AMOLED_SCLK 15
+#define AMOLED_D0 16
+#define AMOLED_D1 17
+#define AMOLED_D2 18
+#define AMOLED_D3 8
+#define AMOLED_RST 46
+
+
+// Arduino_DataBus *bus = new Arduino_ESP32QSPI(
+//     8 /* CS */, 7 /* SCK */, 15 /* D0 */, 16 /* D1 */, 17 /* D2 */, 18 /* D3 */);
+
 Arduino_DataBus *bus = new Arduino_ESP32QSPI(
-    8 /* CS */, 7 /* SCK */, 15 /* D0 */, 16 /* D1 */, 17 /* D2 */, 18 /* D3 */);
-Arduino_CO5300 *gfx = new Arduino_CO5300(bus, 12 /* RST */, 0 /* rotation */, false /* IPS */, SCREEN_WIDTH, SCREEN_HEIGHT,
+    AMOLED_CS /* CS */, AMOLED_SCLK /* SCK */, AMOLED_D0 /* D0 */, AMOLED_D1 /* D1 */, AMOLED_D2 /* D2 */, AMOLED_D3 /* D3 */);
+
+Arduino_CO5300 *gfx = new Arduino_CO5300(bus, AMOLED_RST /* RST */, 0 /* rotation */, false /* IPS */, SCREEN_WIDTH, SCREEN_HEIGHT,
                                     0 /* col offset 1 */, 0 /* row offset 1 */, 0 /* col_offset2 */, 0 /* row_offset2 */);
 // #define CANVAS
 // Arduino_Canvas *gfx = new Arduino_Canvas(SCREEN_WIDTH /* width */, SCREEN_HEIGHT /* height */, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */);

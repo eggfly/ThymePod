@@ -13,7 +13,9 @@
 #include "FreeMono8pt7b.h"
 #include "FreeSansBold10pt7b.h"
 #include "FreeSerifBoldItalic12pt7b.h"
+// #include <Wire.h>
 
+#include <Adafruit_VS1053.h>
 
 /* Uncomment a dev device in Arduino_GFX_dev_device.h */
 #define GFX_DEV_DEVICE AM200Q460460LK
@@ -62,7 +64,7 @@ void setup()
   Serial.println("Arduino_GFX PDQgraphicstest example!");
 
   // Init Display
-  if (!gfx->begin(2*1000*1000))
+  if (!gfx->begin(20 * 1000 * 1000))
   // if (!gfx->begin(80000000)) /* specify data bus speed */
   {
     Serial.println("gfx->begin() failed!");
@@ -172,7 +174,6 @@ void serialOut(const __FlashStringHelper *item, int32_t v, uint32_t d, bool clea
   }
 }
 
-
 void loop(void)
 {
   Serial.println(F("Benchmark\tmicro-secs"));
@@ -187,7 +188,6 @@ void loop(void)
 
   int32_t usecText = testText();
   serialOut(F("Text\t"), usecText, 3000, true);
-
 
   // Serial.println(F("before delay 2"));
   // delay(10000);
@@ -316,11 +316,11 @@ int32_t testFillScreen()
   gfx->fillScreen(RGB565_BLUE);
   gfx->fillScreen(RGB565_BLACK);
   // 这里竟然刷出屏幕来，这后面delay能看到
-  
+
 #ifdef CANVAS
   gfx->flush(); // 确保Canvas内容刷新到屏幕
 #endif
-  
+
   return micros() - start;
 }
 
