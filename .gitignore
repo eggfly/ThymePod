@@ -1,4 +1,5 @@
 sdkconfig.old
+managed_components
 
 .DS_Store
 .vscode

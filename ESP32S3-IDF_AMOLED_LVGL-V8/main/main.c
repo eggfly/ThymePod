@@ -192,7 +192,7 @@ static SemaphoreHandle_t lvgl_mux = NULL;
 #elif CURRENT_SCREEN_SIZE == AM200Q460460LK_200_460x460
   #define EXAMPLE_LCD_H_RES              460
   #define EXAMPLE_LCD_V_RES              460
-  #define EXAMPLE_LCD_X_GAP              0
+  #define EXAMPLE_LCD_X_GAP              10
   #define EXAMPLE_LCD_Y_GAP              0
   #define TOUCH_IC_CONFIG                CST820_ID
   #define AMOLED_QSPI_MAX_PCLK           20 * 1000 * 1000
