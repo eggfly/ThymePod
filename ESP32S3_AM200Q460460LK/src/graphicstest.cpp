@@ -34,7 +34,7 @@
 int32_t w, h, n, n1, cx, cy, cx1, cy1, cn, cn1;
 uint8_t tsa, tsb, tsc, ds;
 
-void setup();
+void setup_screen();
 void loop(void);
 int32_t testFillScreen();
 int32_t testText();
@@ -52,13 +52,13 @@ int32_t testTriangles();
 int32_t testFilledRoundRects();
 int32_t testRoundRects();
 
-void setup()
+void setup_screen()
 {
 #ifdef DEV_DEVICE_INIT
   DEV_DEVICE_INIT();
 #endif
 
-  Serial.begin(115200);
+  // Serial.begin(115200);
   // Serial.setDebugOutput(true);
   // while(!Serial);
   Serial.println("Arduino_GFX PDQgraphicstest example!");
@@ -174,7 +174,7 @@ void serialOut(const __FlashStringHelper *item, int32_t v, uint32_t d, bool clea
   }
 }
 
-void loop(void)
+void loop_screen(void)
 {
   Serial.println(F("Benchmark\tmicro-secs"));
 
