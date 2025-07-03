@@ -54,6 +54,8 @@ void printDirectory(File dir, int numTabs);
 void setup_screen();
 void loop_screen();
 
+uint8_t volume = 60;
+
 void setup()
 {
     pinMode(BREAKOUT_DCS, OUTPUT);
@@ -84,7 +86,7 @@ void setup()
 
     // Set volume for left, right channels. lower numbers == louder volume!
     // 100声音小，70声音大，越小越大
-    musicPlayer.setVolume(60, 60);
+    musicPlayer.setVolume(volume, volume);
     // Timer interrupts are not suggested, better to use DREQ interrupt!
     // musicPlayer.useInterrupt(VS1053_FILEPLAYER_TIMER0_INT); // timer int
 
@@ -97,12 +99,12 @@ void setup()
     // musicPlayer.playFullFile("/ygzjhyl.mp3");
     // Play another file in the background, REQUIRES interrupts!
     Serial.println(F("Start Playing..."));
-    musicPlayer.startPlayingFile("/server/康姆士乐团-你要如何，我们就如何.mp3");
+    musicPlayer.startPlayingFile("/server/蔡琴 - 渡口.wav");
 }
 
 void loop()
 {
-    loop_screen();
+    // loop_screen();
     // File is playing in the background
     if (musicPlayer.stopped())
     {
@@ -138,9 +140,19 @@ void loop()
                 musicPlayer.pausePlaying(false);
             }
         }
+        if (c == '+')
+        {
+            volume -= 2;
+            musicPlayer.setVolume(volume, volume);
+        }
+        if (c == '-')
+        {
+            volume += 2;
+            musicPlayer.setVolume(volume, volume);
+        }
     }
 
-    delay(1);
+    delay(100);
 }
 
 /// File listing helper
