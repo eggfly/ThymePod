@@ -93,7 +93,7 @@ void setup()
     // If DREQ is on an interrupt pin (on uno, #2 or #3) we can do background
     // audio playing
     musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT); // DREQ int
-
+    // /server/达达-Song F.mp3 
     // Play one file, don't return until complete
     // Serial.println(F("Playing ygzjhyl.mp3"));
     // musicPlayer.playFullFile("/ygzjhyl.mp3");
@@ -118,16 +118,22 @@ void loop()
     Serial.printf("Decode time: %d\n", decodeTime);
     if (Serial.available())
     {
-        char c = Serial.read();
-
+        String r = Serial.readStringUntil('\n');
+        r.trim();
+        if (r.length() > 5)
+        {
+            auto newPath = r.c_str();
+            musicPlayer.stopPlaying();
+            musicPlayer.startPlayingFile(newPath);
+        }
         // if we get an 's' on the serial console, stop!
-        if (c == 's')
+        if (r == "s")
         {
             musicPlayer.stopPlaying();
         }
 
         // if we get an 'p' on the serial console, pause/unpause!
-        if (c == 'p')
+        if (r == "p")
         {
             if (!musicPlayer.paused())
             {
@@ -140,12 +146,12 @@ void loop()
                 musicPlayer.pausePlaying(false);
             }
         }
-        if (c == '+')
+        if (r == "+")
         {
             volume -= 2;
             musicPlayer.setVolume(volume, volume);
         }
-        if (c == '-')
+        if (r == "-")
         {
             volume += 2;
             musicPlayer.setVolume(volume, volume);
