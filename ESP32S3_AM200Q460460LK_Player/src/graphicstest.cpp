@@ -15,8 +15,6 @@
 #include "FreeSerifBoldItalic12pt7b.h"
 // #include <Wire.h>
 
-#include <Adafruit_VS1053.h>
-
 /* Uncomment a dev device in Arduino_GFX_dev_device.h */
 #define GFX_DEV_DEVICE AM200Q460460LK
 
@@ -58,19 +56,20 @@ void setup()
   DEV_DEVICE_INIT();
 #endif
 
-  // Serial.begin(115200);
+  Serial.begin(115200);
   // Serial.setDebugOutput(true);
   // while(!Serial);
   Serial.println("Arduino_GFX PDQgraphicstest example!");
 
   // Init Display
-  if (!gfx->begin(20 * 1000 * 1000))
+  if (!gfx->begin(80 * 1000 * 1000))
   // if (!gfx->begin(80000000)) /* specify data bus speed */
   {
     Serial.println("gfx->begin() failed!");
   }
 
   gfx->setBrightness(60);
+  delay(2000);
 
   // gfx->setUTF8Print(true); // enable UTF8 support for the Arduino print() function
   // gfx->setFont(u8g2_font_unifont_t_chinese);
@@ -310,11 +309,19 @@ int32_t testFillScreen()
 {
   uint32_t start = micros_start();
   // Shortened this tedious test!
-  gfx->fillScreen(RGB565_WHITE);
-  gfx->fillScreen(RGB565_RED);
-  gfx->fillScreen(RGB565_GREEN);
-  gfx->fillScreen(RGB565_BLUE);
-  gfx->fillScreen(RGB565_BLACK);
+  size_t frames = 0;
+  auto t = millis();
+  for (int i = 0; i < 10; i++)
+  {
+    gfx->fillScreen(RGB565_WHITE);
+    gfx->fillScreen(RGB565_RED);
+    gfx->fillScreen(RGB565_GREEN);
+    gfx->fillScreen(RGB565_BLUE);
+    gfx->fillScreen(RGB565_BLACK);
+    frames += 5; // 5 frames per loop
+  }
+  auto fps = frames / ((millis() - t) / 1000.0);
+  Serial.printf("---- FPS: %.2f\n", fps);
   // 这里竟然刷出屏幕来，这后面delay能看到
 
 #ifdef CANVAS
