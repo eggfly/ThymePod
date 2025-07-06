@@ -16,6 +16,7 @@
 #include "lv_demos.h"
 
 #include "esp_lcd_qspi_amoled.h"
+#include "music_player_ui.h"
 
 static const char *TAG = "example";
 static SemaphoreHandle_t lvgl_mux = NULL;
@@ -341,10 +342,39 @@ static void example_lvgl_port_task(void *arg)
 {
     ESP_LOGI(TAG, "Starting LVGL task");
     uint32_t task_delay_ms = EXAMPLE_LVGL_TASK_MAX_DELAY_MS;
+    uint32_t music_time = 0;
+    bool music_playing = false;
+    
     while (1) {
         // Lock the mutex due to the LVGL APIs are not thread-safe
         if (example_lvgl_lock(-1)) {
             task_delay_ms = lv_timer_handler();
+            
+            // 模拟音乐播放进度更新
+            if (music_player_get_playing_state()) {
+                if (!music_playing) {
+                    music_playing = true;
+                    ESP_LOGI(TAG, "开始模拟音乐播放");
+                }
+                
+                // 每秒更新一次进度
+                static uint32_t last_update = 0;
+                uint32_t current_tick = xTaskGetTickCount();
+                if (current_tick - last_update >= pdMS_TO_TICKS(1000)) {
+                    music_time++;
+                    if (music_time > 180) {
+                        music_time = 0; // 循环播放
+                    }
+                    music_player_update_progress(music_time, 180);
+                    last_update = current_tick;
+                }
+            } else {
+                if (music_playing) {
+                    music_playing = false;
+                    ESP_LOGI(TAG, "音乐播放暂停");
+                }
+            }
+            
             // Release the mutex
             example_lvgl_unlock();
         }
@@ -517,14 +547,19 @@ void app_main(void)
     assert(lvgl_mux);
     xTaskCreate(example_lvgl_port_task, "LVGL", EXAMPLE_LVGL_TASK_STACK_SIZE, NULL, EXAMPLE_LVGL_TASK_PRIORITY, NULL);
 
-    ESP_LOGI(TAG, "Display LVGL demos");
+    ESP_LOGI(TAG, "Display music player UI");
     // Lock the mutex due to the LVGL APIs are not thread-safe
     if (example_lvgl_lock(-1)) {
 
-        lv_demo_widgets();      /* A widgets example */
-        // lv_demo_music();        /* A modern, smartphone-like music player demo. */
-        // lv_demo_stress();       /* A stress test for LVGL. */
-        // lv_demo_benchmark();    /* A demo to measure the performance of LVGL or to compare different settings. */
+        // 创建音乐播放器界面
+        music_player_create_ui();
+        
+        // 设置示例歌曲信息
+        // music_player_update_song_info("夜曲", "周杰伦");
+        music_player_update_song_info("Hotel California", "Eagles");
+        
+        // 设置初始播放进度
+        music_player_update_progress(0, 180);
 
         // Release the mutex
         example_lvgl_unlock();
