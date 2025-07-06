@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.c" "music_player_ui.c"
+    SRCS "main.cpp" "lvgl_amoled.c" "music_player_ui.c"
     INCLUDE_DIRS ".")
 
 set_source_files_properties(

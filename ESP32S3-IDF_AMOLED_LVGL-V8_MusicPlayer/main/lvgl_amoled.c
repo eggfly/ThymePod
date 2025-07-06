@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "Arduino.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -21,200 +22,200 @@
 static const char *TAG = "example";
 static SemaphoreHandle_t lvgl_mux = NULL;
 
-#define LCD_HOST    SPI2_HOST
-#define TOUCH_HOST  I2C_NUM_0
+#define LCD_HOST SPI2_HOST
+#define TOUCH_HOST I2C_NUM_0
 
 #if CONFIG_LV_COLOR_DEPTH == 32
-#define LCD_BIT_PER_PIXEL       (24)
+#define LCD_BIT_PER_PIXEL (24)
 #elif CONFIG_LV_COLOR_DEPTH == 16
-#define LCD_BIT_PER_PIXEL       (16)
+#define LCD_BIT_PER_PIXEL (16)
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your LCD spec //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
+#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL 1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 // 鱼鹰光电屏幕验证底板
-#define EXAMPLE_PIN_NUM_LCD_CS            (GPIO_NUM_46)
-#define EXAMPLE_PIN_NUM_LCD_PCLK          (GPIO_NUM_16)
-#define EXAMPLE_PIN_NUM_LCD_DATA0         (GPIO_NUM_17)
-#define EXAMPLE_PIN_NUM_LCD_DATA1         (GPIO_NUM_18)
-#define EXAMPLE_PIN_NUM_LCD_DATA2         (GPIO_NUM_8)
-#define EXAMPLE_PIN_NUM_LCD_DATA3         (GPIO_NUM_3)
-#define EXAMPLE_PIN_NUM_LCD_RST           (GPIO_NUM_9)
+#define EXAMPLE_PIN_NUM_LCD_CS (GPIO_NUM_46)
+#define EXAMPLE_PIN_NUM_LCD_PCLK (GPIO_NUM_16)
+#define EXAMPLE_PIN_NUM_LCD_DATA0 (GPIO_NUM_17)
+#define EXAMPLE_PIN_NUM_LCD_DATA1 (GPIO_NUM_18)
+#define EXAMPLE_PIN_NUM_LCD_DATA2 (GPIO_NUM_8)
+#define EXAMPLE_PIN_NUM_LCD_DATA3 (GPIO_NUM_3)
+#define EXAMPLE_PIN_NUM_LCD_RST (GPIO_NUM_9)
 
-#define EXAMPLE_USE_TOUCH               1
+#define EXAMPLE_USE_TOUCH 1
 
 #if EXAMPLE_USE_TOUCH
 // ESP32S3_AMOLED_触摸
-#define EXAMPLE_PIN_NUM_TOUCH_SCL         (GPIO_NUM_11)
-#define EXAMPLE_PIN_NUM_TOUCH_SDA         (GPIO_NUM_12)
-#define EXAMPLE_PIN_NUM_TOUCH_INT         (GPIO_NUM_13)
-#define EXAMPLE_PIN_NUM_TOUCH_RST         (GPIO_NUM_14)
+#define EXAMPLE_PIN_NUM_TOUCH_SCL (GPIO_NUM_11)
+#define EXAMPLE_PIN_NUM_TOUCH_SDA (GPIO_NUM_12)
+#define EXAMPLE_PIN_NUM_TOUCH_INT (GPIO_NUM_13)
+#define EXAMPLE_PIN_NUM_TOUCH_RST (GPIO_NUM_14)
 #endif
 
-#define CST816_ID   1
-#define CST820_ID   2
+#define CST816_ID 1
+#define CST820_ID 2
 #define CHSC6417_ID 3
 
-#define EXAMPLE_LVGL_BUF_HEIGHT        (EXAMPLE_LCD_V_RES / 10)
-#define EXAMPLE_LVGL_TICK_PERIOD_MS    2
+#define EXAMPLE_LVGL_BUF_HEIGHT (EXAMPLE_LCD_V_RES / 10)
+#define EXAMPLE_LVGL_TICK_PERIOD_MS 2
 #define EXAMPLE_LVGL_TASK_MAX_DELAY_MS 500
 #define EXAMPLE_LVGL_TASK_MIN_DELAY_MS 1
-#define EXAMPLE_LVGL_TASK_STACK_SIZE   (4 * 1024)
-#define EXAMPLE_LVGL_TASK_PRIORITY     2
+#define EXAMPLE_LVGL_TASK_STACK_SIZE (4 * 1024)
+#define EXAMPLE_LVGL_TASK_PRIORITY 2
 
 // 鱼鹰光电
-#define AM196Q410502LK_196_410x502   1
-#define AM178Q368448LK_178_368x448   2
+#define AM196Q410502LK_196_410x502 1
+#define AM178Q368448LK_178_368x448 2
 #define AM151Q466466LK_151_466x466_C 3
 #define AM160Q480480LK_160_480x480_C 4
-#define AM201Q240296LK_201_240x296   5
-#define AM200Q460460LK_200_460x460   6
+#define AM201Q240296LK_201_240x296 5
+#define AM200Q460460LK_200_460x460 6
 
 // 设置当前屏幕尺寸
 #define CURRENT_SCREEN_SIZE AM200Q460460LK_200_460x460 // 在这里选择屏幕尺寸
 
 #if CURRENT_SCREEN_SIZE == AM196Q410502LK_196_410x502
-  #define EXAMPLE_LCD_H_RES              410
-  #define EXAMPLE_LCD_V_RES              502
-  #define EXAMPLE_LCD_X_GAP              22
-  #define EXAMPLE_LCD_Y_GAP              0
-  #define TOUCH_IC_CONFIG                CST820_ID
-  #define AMOLED_QSPI_MAX_PCLK           40 * 1000 * 1000
+#define EXAMPLE_LCD_H_RES 410
+#define EXAMPLE_LCD_V_RES 502
+#define EXAMPLE_LCD_X_GAP 22
+#define EXAMPLE_LCD_Y_GAP 0
+#define TOUCH_IC_CONFIG CST820_ID
+#define AMOLED_QSPI_MAX_PCLK 40 * 1000 * 1000
 
-  static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0x11, (uint8_t []){0x00}, 0, 120},// 退出睡眠模式
-    {0x35, (uint8_t []){0x00}, 1, 0},// 开启撕裂效果
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0xC4, (uint8_t []){0x80}, 1, 0},// SPI 模式控制
+static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0x11, (uint8_t[]){0x00}, 0, 120}, // 退出睡眠模式
+    {0x35, (uint8_t[]){0x00}, 1, 0},   // 开启撕裂效果
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0xC4, (uint8_t[]){0x80}, 1, 0}, // SPI 模式控制
     // {0x36, (uint8_t []){0x00}, 1, 0},// 设置内存数据访问控制
-    {0x3A, (uint8_t []){0x55}, 1, 0},//// 设置像素格式 16位
-    {0x53, (uint8_t []){0x20}, 1, 0},// 设置 CTRL 显示1
-    {0x63, (uint8_t []){0xFF}, 1, 0},// 设置 HBM 模式下的亮度值
-    {0x2A, (uint8_t []){0x00, 0x00, 0x01, 0xBF}, 4, 0},
-    {0x2B, (uint8_t []){0x00, 0x00, 0x01, 0x6F}, 4, 0},
-    {0x29, (uint8_t []){0x00}, 0, 60},// 打开显示器
-    {0x51, (uint8_t []){0xFF}, 1, 0},// 设置正常模式下的亮度值
-    {0x58, (uint8_t []){0x07}, 1, 10},// 设置正常模式下的亮度值
-  };
+    {0x3A, (uint8_t[]){0x55}, 1, 0}, //// 设置像素格式 16位
+    {0x53, (uint8_t[]){0x20}, 1, 0}, // 设置 CTRL 显示1
+    {0x63, (uint8_t[]){0xFF}, 1, 0}, // 设置 HBM 模式下的亮度值
+    {0x2A, (uint8_t[]){0x00, 0x00, 0x01, 0xBF}, 4, 0},
+    {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0x6F}, 4, 0},
+    {0x29, (uint8_t[]){0x00}, 0, 60}, // 打开显示器
+    {0x51, (uint8_t[]){0xFF}, 1, 0},  // 设置正常模式下的亮度值
+    {0x58, (uint8_t[]){0x07}, 1, 10}, // 设置正常模式下的亮度值
+};
 #elif CURRENT_SCREEN_SIZE == AM178Q368448LK_178_368x448
-  #define EXAMPLE_LCD_H_RES              368
-  #define EXAMPLE_LCD_V_RES              448
-  #define EXAMPLE_LCD_X_GAP              16
-  #define EXAMPLE_LCD_Y_GAP              0
-  #define TOUCH_IC_CONFIG                CHSC6417_ID
-  #define AMOLED_QSPI_MAX_PCLK           40 * 1000 * 1000
-  static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0x11, (uint8_t []){0x00}, 0, 120},// 退出睡眠模式
-    {0x35, (uint8_t []){0x00}, 1, 0},// 开启撕裂效果
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0xC4, (uint8_t []){0x80}, 1, 0},// SPI 模式控制
+#define EXAMPLE_LCD_H_RES 368
+#define EXAMPLE_LCD_V_RES 448
+#define EXAMPLE_LCD_X_GAP 16
+#define EXAMPLE_LCD_Y_GAP 0
+#define TOUCH_IC_CONFIG CHSC6417_ID
+#define AMOLED_QSPI_MAX_PCLK 40 * 1000 * 1000
+static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0x11, (uint8_t[]){0x00}, 0, 120}, // 退出睡眠模式
+    {0x35, (uint8_t[]){0x00}, 1, 0},   // 开启撕裂效果
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0xC4, (uint8_t[]){0x80}, 1, 0}, // SPI 模式控制
     // {0x36, (uint8_t []){0x00}, 1, 0},// 设置内存数据访问控制
-    {0x3A, (uint8_t []){0x55}, 1, 0},//// 设置像素格式 16位
-    {0x53, (uint8_t []){0x20}, 1, 0},// 设置 CTRL 显示1
-    {0x63, (uint8_t []){0xFF}, 1, 0},// 设置 HBM 模式下的亮度值
-    {0x2A, (uint8_t []){0x00, 0x00, 0x01, 0xBF}, 4, 0},
-    {0x2B, (uint8_t []){0x00, 0x00, 0x01, 0x6F}, 4, 0},
-    {0x29, (uint8_t []){0x00}, 0, 60},// 打开显示器
-    {0x51, (uint8_t []){0xA0}, 1, 0},// 设置正常模式下的亮度值
-    {0x58, (uint8_t []){0x07}, 1, 10},// 设置正常模式下的亮度值
-  };
+    {0x3A, (uint8_t[]){0x55}, 1, 0}, //// 设置像素格式 16位
+    {0x53, (uint8_t[]){0x20}, 1, 0}, // 设置 CTRL 显示1
+    {0x63, (uint8_t[]){0xFF}, 1, 0}, // 设置 HBM 模式下的亮度值
+    {0x2A, (uint8_t[]){0x00, 0x00, 0x01, 0xBF}, 4, 0},
+    {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0x6F}, 4, 0},
+    {0x29, (uint8_t[]){0x00}, 0, 60}, // 打开显示器
+    {0x51, (uint8_t[]){0xA0}, 1, 0},  // 设置正常模式下的亮度值
+    {0x58, (uint8_t[]){0x07}, 1, 10}, // 设置正常模式下的亮度值
+};
 #elif CURRENT_SCREEN_SIZE == AM151Q466466LK_151_466x466_C
-  #define EXAMPLE_LCD_H_RES              466
-  #define EXAMPLE_LCD_V_RES              466
-  #define EXAMPLE_LCD_X_GAP              6
-  #define EXAMPLE_LCD_Y_GAP              0
-  #define TOUCH_IC_CONFIG                CST820_ID
-  #define AMOLED_QSPI_MAX_PCLK           40 * 1000 * 1000
-  static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0x11, (uint8_t []){0x00}, 0, 120},// 退出睡眠模式
-    {0x35, (uint8_t []){0x00}, 1, 0},// 开启撕裂效果
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0xC4, (uint8_t []){0x80}, 1, 0},// SPI 模式控制
+#define EXAMPLE_LCD_H_RES 466
+#define EXAMPLE_LCD_V_RES 466
+#define EXAMPLE_LCD_X_GAP 6
+#define EXAMPLE_LCD_Y_GAP 0
+#define TOUCH_IC_CONFIG CST820_ID
+#define AMOLED_QSPI_MAX_PCLK 40 * 1000 * 1000
+static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0x11, (uint8_t[]){0x00}, 0, 120}, // 退出睡眠模式
+    {0x35, (uint8_t[]){0x00}, 1, 0},   // 开启撕裂效果
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0xC4, (uint8_t[]){0x80}, 1, 0}, // SPI 模式控制
     // {0x36, (uint8_t []){0x00}, 1, 0},// 设置内存数据访问控制
-    {0x3A, (uint8_t []){0x55}, 1, 0},//// 设置像素格式 16位
-    {0x53, (uint8_t []){0x20}, 1, 0},// 设置 CTRL 显示1
-    {0x63, (uint8_t []){0xFF}, 1, 0},// 设置 HBM 模式下的亮度值
-    {0x2A, (uint8_t []){0x00, 0x00, 0x01, 0xBF}, 4, 0},
-    {0x2B, (uint8_t []){0x00, 0x00, 0x01, 0x6F}, 4, 0},
-    {0x51, (uint8_t []){0xA0}, 1, 0},// 设置正常模式下的亮度值
-    {0x58, (uint8_t []){0x07}, 1, 10},// 设置正常模式下的亮度值
-  };
+    {0x3A, (uint8_t[]){0x55}, 1, 0}, //// 设置像素格式 16位
+    {0x53, (uint8_t[]){0x20}, 1, 0}, // 设置 CTRL 显示1
+    {0x63, (uint8_t[]){0xFF}, 1, 0}, // 设置 HBM 模式下的亮度值
+    {0x2A, (uint8_t[]){0x00, 0x00, 0x01, 0xBF}, 4, 0},
+    {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0x6F}, 4, 0},
+    {0x51, (uint8_t[]){0xA0}, 1, 0},  // 设置正常模式下的亮度值
+    {0x58, (uint8_t[]){0x07}, 1, 10}, // 设置正常模式下的亮度值
+};
 #elif CURRENT_SCREEN_SIZE == AM160Q480480LK_160_480x480_C
-  #define EXAMPLE_LCD_H_RES              480
-  #define EXAMPLE_LCD_V_RES              480
-  #define EXAMPLE_LCD_X_GAP              0
-  #define EXAMPLE_LCD_Y_GAP              0
-  #define TOUCH_IC_CONFIG                CHSC6417_ID
-  #define AMOLED_QSPI_MAX_PCLK           40 * 1000 * 1000
-  static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0xF0, (uint8_t []){0x50}, 1, 0},
-    {0xB1, (uint8_t []){0x78,0x70}, 2, 0},
-    {0xC4, (uint8_t []){0x80}, 1, 0},
-    {0x35, (uint8_t []){0x00}, 1, 0},
-    {0x36, (uint8_t []){0x00}, 1, 0},
-    {0x3A, (uint8_t []){0x55}, 1, 0},
-    {0x53, (uint8_t []){0x20}, 1, 0},
-    {0x51, (uint8_t []){0xFF}, 1, 0},
-    {0x63, (uint8_t []){0xFF}, 1, 0},
-    {0x64, (uint8_t []){0x10}, 1, 0},
-    {0x67, (uint8_t []){0x01}, 1, 0},
-    {0x68, (uint8_t []){0x31}, 1, 0},
-    {0x2A, (uint8_t []){0x00,0x00,0x01,0xdf}, 4, 0},
-    {0x2B, (uint8_t []){0x00,0x00,0x01,0xdf}, 4, 0},
-    {0x11, (uint8_t []){0x00}, 0, 120},
-    {0x29, (uint8_t []){0x00}, 0, 120},
-  };
+#define EXAMPLE_LCD_H_RES 480
+#define EXAMPLE_LCD_V_RES 480
+#define EXAMPLE_LCD_X_GAP 0
+#define EXAMPLE_LCD_Y_GAP 0
+#define TOUCH_IC_CONFIG CHSC6417_ID
+#define AMOLED_QSPI_MAX_PCLK 40 * 1000 * 1000
+static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0xF0, (uint8_t[]){0x50}, 1, 0},
+    {0xB1, (uint8_t[]){0x78, 0x70}, 2, 0},
+    {0xC4, (uint8_t[]){0x80}, 1, 0},
+    {0x35, (uint8_t[]){0x00}, 1, 0},
+    {0x36, (uint8_t[]){0x00}, 1, 0},
+    {0x3A, (uint8_t[]){0x55}, 1, 0},
+    {0x53, (uint8_t[]){0x20}, 1, 0},
+    {0x51, (uint8_t[]){0xFF}, 1, 0},
+    {0x63, (uint8_t[]){0xFF}, 1, 0},
+    {0x64, (uint8_t[]){0x10}, 1, 0},
+    {0x67, (uint8_t[]){0x01}, 1, 0},
+    {0x68, (uint8_t[]){0x31}, 1, 0},
+    {0x2A, (uint8_t[]){0x00, 0x00, 0x01, 0xdf}, 4, 0},
+    {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0xdf}, 4, 0},
+    {0x11, (uint8_t[]){0x00}, 0, 120},
+    {0x29, (uint8_t[]){0x00}, 0, 120},
+};
 #elif CURRENT_SCREEN_SIZE == AM201Q240296LK_201_240x296
-  #define EXAMPLE_LCD_H_RES              240
-  #define EXAMPLE_LCD_V_RES              296
-  #define EXAMPLE_LCD_X_GAP              0
-  #define EXAMPLE_LCD_Y_GAP              0
-  #define TOUCH_IC_CONFIG                CST816_ID
-  #define AMOLED_QSPI_MAX_PCLK           40 * 1000 * 1000
-  static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
-      {0xFE, (uint8_t []){0x00}, 1, 0},
-      {0xC4, (uint8_t []){0x80}, 1, 0},
-      {0x35, (uint8_t []){0x00}, 1, 0},
-      {0x3A, (uint8_t []){0x55}, 1, 0},
-      {0x53, (uint8_t []){0x20}, 1, 0},
-      {0x51, (uint8_t []){0xFF}, 1, 0},
-      {0x63, (uint8_t []){0xFF}, 1, 0},
-      {0x2A, (uint8_t []){0x00,0x00,0x00,0xEF}, 4, 0},
-      {0x2B, (uint8_t []){0x00,0x00,0x01,0x27}, 4, 0},
-      {0x11, (uint8_t []){0x00}, 0, 80},
-      {0x29, (uint8_t []){0x00}, 0, 10},
-  };
+#define EXAMPLE_LCD_H_RES 240
+#define EXAMPLE_LCD_V_RES 296
+#define EXAMPLE_LCD_X_GAP 0
+#define EXAMPLE_LCD_Y_GAP 0
+#define TOUCH_IC_CONFIG CST816_ID
+#define AMOLED_QSPI_MAX_PCLK 40 * 1000 * 1000
+static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0xC4, (uint8_t[]){0x80}, 1, 0},
+    {0x35, (uint8_t[]){0x00}, 1, 0},
+    {0x3A, (uint8_t[]){0x55}, 1, 0},
+    {0x53, (uint8_t[]){0x20}, 1, 0},
+    {0x51, (uint8_t[]){0xFF}, 1, 0},
+    {0x63, (uint8_t[]){0xFF}, 1, 0},
+    {0x2A, (uint8_t[]){0x00, 0x00, 0x00, 0xEF}, 4, 0},
+    {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0x27}, 4, 0},
+    {0x11, (uint8_t[]){0x00}, 0, 80},
+    {0x29, (uint8_t[]){0x00}, 0, 10},
+};
 #elif CURRENT_SCREEN_SIZE == AM200Q460460LK_200_460x460
-  #define EXAMPLE_LCD_H_RES              460
-  #define EXAMPLE_LCD_V_RES              460
-  #define EXAMPLE_LCD_X_GAP              10
-  #define EXAMPLE_LCD_Y_GAP              0
-  #define TOUCH_IC_CONFIG                CST820_ID
-  #define AMOLED_QSPI_MAX_PCLK           20 * 1000 * 1000
-  static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0x11, (uint8_t []){0x00}, 0, 120},// 退出睡眠模式
-    {0x35, (uint8_t []){0x00}, 1, 0},// 开启撕裂效果
-    {0xFE, (uint8_t []){0x00}, 1, 0},
-    {0xC4, (uint8_t []){0x80}, 1, 0},// SPI 模式控制
+#define EXAMPLE_LCD_H_RES 460
+#define EXAMPLE_LCD_V_RES 460
+#define EXAMPLE_LCD_X_GAP 10
+#define EXAMPLE_LCD_Y_GAP 0
+#define TOUCH_IC_CONFIG CST820_ID
+#define AMOLED_QSPI_MAX_PCLK 20 * 1000 * 1000
+static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0x11, (uint8_t[]){0x00}, 0, 120}, // 退出睡眠模式
+    {0x35, (uint8_t[]){0x00}, 1, 0},   // 开启撕裂效果
+    {0xFE, (uint8_t[]){0x00}, 1, 0},
+    {0xC4, (uint8_t[]){0x80}, 1, 0}, // SPI 模式控制
     // {0x36, (uint8_t []){0x00}, 1, 0},// 设置内存数据访问控制
-    {0x3A, (uint8_t []){0x55}, 1, 0},//// 设置像素格式 16位
-    {0x53, (uint8_t []){0x20}, 1, 0},// 设置 CTRL 显示1
-    {0x63, (uint8_t []){0xFF}, 1, 0},// 设置 HBM 模式下的亮度值
-    {0x2A, (uint8_t []){0x00, 0x00, 0x01, 0xBF}, 4, 0},
-    {0x2B, (uint8_t []){0x00, 0x00, 0x01, 0x6F}, 4, 0},
-    {0x29, (uint8_t []){0x00}, 0, 60},// 打开显示器
-    {0x51, (uint8_t []){0xFF}, 1, 0},// 设置正常模式下的亮度值
-    {0x58, (uint8_t []){0x07}, 1, 10},// 设置正常模式下的亮度值
-  };
+    {0x3A, (uint8_t[]){0x55}, 1, 0}, //// 设置像素格式 16位
+    {0x53, (uint8_t[]){0x20}, 1, 0}, // 设置 CTRL 显示1
+    {0x63, (uint8_t[]){0xFF}, 1, 0}, // 设置 HBM 模式下的亮度值
+    {0x2A, (uint8_t[]){0x00, 0x00, 0x01, 0xBF}, 4, 0},
+    {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0x6F}, 4, 0},
+    {0x29, (uint8_t[]){0x00}, 0, 60}, // 打开显示器
+    {0x51, (uint8_t[]){0xFF}, 1, 0},  // 设置正常模式下的亮度值
+    {0x58, (uint8_t[]){0x07}, 1, 10}, // 设置正常模式下的亮度值
+};
 #else
-  #error "Unsupported screen size"
+#error "Unsupported screen size"
 #endif
 
 // 根据TOUCH_IC_CONFIG的配置，选择调用的头文件
@@ -222,18 +223,18 @@ static SemaphoreHandle_t lvgl_mux = NULL;
 
 #if TOUCH_IC_CONFIG == CST816_ID
 #include "esp_lcd_touch_cst816.h"
-#define TOUCH_IO_I2C_CONFIG    ESP_LCD_TOUCH_IO_I2C_CST816_CONFIG
-#define esp_lcd_touch_new_i2c  esp_lcd_touch_new_i2c_cst816
+#define TOUCH_IO_I2C_CONFIG ESP_LCD_TOUCH_IO_I2C_CST816_CONFIG
+#define esp_lcd_touch_new_i2c esp_lcd_touch_new_i2c_cst816
 
 #elif TOUCH_IC_CONFIG == CST820_ID
 #include "esp_lcd_touch_cst820.h"
-#define TOUCH_IO_I2C_CONFIG    ESP_LCD_TOUCH_IO_I2C_CST820_CONFIG  
-#define esp_lcd_touch_new_i2c  esp_lcd_touch_new_i2c_cst820
+#define TOUCH_IO_I2C_CONFIG ESP_LCD_TOUCH_IO_I2C_CST820_CONFIG
+#define esp_lcd_touch_new_i2c esp_lcd_touch_new_i2c_cst820
 
 #elif TOUCH_IC_CONFIG == CHSC6417_ID
 #include "esp_lcd_touch_chsc6417.h"
-#define TOUCH_IO_I2C_CONFIG    ESP_LCD_TOUCH_IO_I2C_CHSC6417_CONFIG
-#define esp_lcd_touch_new_i2c  esp_lcd_touch_new_i2c_chsc6417
+#define TOUCH_IO_I2C_CONFIG ESP_LCD_TOUCH_IO_I2C_CHSC6417_CONFIG
+#define esp_lcd_touch_new_i2c esp_lcd_touch_new_i2c_chsc6417
 #endif
 
 esp_lcd_touch_handle_t tp = NULL;
@@ -249,7 +250,7 @@ static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, 
 
 static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
-    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t) drv->user_data;
+    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)drv->user_data;
     const int offsetx1 = area->x1;
     const int offsetx2 = area->x2;
     const int offsety1 = area->y1;
@@ -266,7 +267,8 @@ static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_
     *to++ = color_map[0].ch.green;
     *to++ = temp;
     // Normal dealing for other pixels
-    for (int i = 1; i < pixel_num; i++) {
+    for (int i = 1; i < pixel_num; i++)
+    {
         *to++ = color_map[i].ch.red;
         *to++ = color_map[i].ch.green;
         *to++ = color_map[i].ch.blue;
@@ -306,15 +308,17 @@ static void example_lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data)
     esp_lcd_touch_read_data(tp);
     /* Read data from touch controller */
     bool tp_pressed = esp_lcd_touch_get_coordinates(tp, &tp_x, &tp_y, NULL, &tp_cnt, 1);
-    if (tp_pressed && tp_cnt > 0) {
+    if (tp_pressed && tp_cnt > 0)
+    {
         data->point.x = tp_x;
         data->point.y = tp_y;
         data->state = LV_INDEV_STATE_PRESSED;
         ESP_LOGI(TAG, "Touch position: %d,%d,%d", tp_cnt, tp_x, tp_y);
-    } else {
+    }
+    else
+    {
         data->state = LV_INDEV_STATE_RELEASED;
     }
-
 }
 #endif
 
@@ -344,43 +348,55 @@ static void example_lvgl_port_task(void *arg)
     uint32_t task_delay_ms = EXAMPLE_LVGL_TASK_MAX_DELAY_MS;
     uint32_t music_time = 0;
     bool music_playing = false;
-    
-    while (1) {
+
+    while (1)
+    {
         // Lock the mutex due to the LVGL APIs are not thread-safe
-        if (example_lvgl_lock(-1)) {
+        if (example_lvgl_lock(-1))
+        {
             task_delay_ms = lv_timer_handler();
-            
+
             // 模拟音乐播放进度更新
-            if (music_player_get_playing_state()) {
-                if (!music_playing) {
+            if (music_player_get_playing_state())
+            {
+                if (!music_playing)
+                {
                     music_playing = true;
                     ESP_LOGI(TAG, "开始模拟音乐播放");
                 }
-                
+
                 // 每秒更新一次进度
                 static uint32_t last_update = 0;
                 uint32_t current_tick = xTaskGetTickCount();
-                if (current_tick - last_update >= pdMS_TO_TICKS(1000)) {
+                if (current_tick - last_update >= pdMS_TO_TICKS(1000))
+                {
                     music_time++;
-                    if (music_time > 180) {
+                    if (music_time > 180)
+                    {
                         music_time = 0; // 循环播放
                     }
                     music_player_update_progress(music_time, 180);
                     last_update = current_tick;
                 }
-            } else {
-                if (music_playing) {
+            }
+            else
+            {
+                if (music_playing)
+                {
                     music_playing = false;
                     ESP_LOGI(TAG, "音乐播放暂停");
                 }
             }
-            
+
             // Release the mutex
             example_lvgl_unlock();
         }
-        if (task_delay_ms > EXAMPLE_LVGL_TASK_MAX_DELAY_MS) {
+        if (task_delay_ms > EXAMPLE_LVGL_TASK_MAX_DELAY_MS)
+        {
             task_delay_ms = EXAMPLE_LVGL_TASK_MAX_DELAY_MS;
-        } else if (task_delay_ms < EXAMPLE_LVGL_TASK_MIN_DELAY_MS) {
+        }
+        else if (task_delay_ms < EXAMPLE_LVGL_TASK_MIN_DELAY_MS)
+        {
             task_delay_ms = EXAMPLE_LVGL_TASK_MIN_DELAY_MS;
         }
         vTaskDelay(pdMS_TO_TICKS(task_delay_ms));
@@ -390,7 +406,8 @@ static void example_lvgl_port_task(void *arg)
 static void i2c_scan(void)
 {
     ESP_LOGI(TAG, "Scanning I2C bus...");
-    for (uint8_t addr = 1; addr < 127; addr++) {
+    for (uint8_t addr = 1; addr < 127; addr++)
+    {
         i2c_cmd_handle_t cmd = i2c_cmd_link_create();
         i2c_master_start(cmd);
         i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, true);
@@ -398,32 +415,33 @@ static void i2c_scan(void)
         esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
         i2c_cmd_link_delete(cmd);
 
-        if (ret == ESP_OK) {
+        if (ret == ESP_OK)
+        {
             ESP_LOGI(TAG, "Found I2C device at address 0x%02x", addr);
         }
     }
     ESP_LOGI(TAG, "I2C scan completed.");
 }
 
-void app_main(void)
+void lvgl_amoled_init(void)
 {
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
     ESP_LOGI(TAG, "Initialize SPI bus");
     const spi_bus_config_t buscfg = QSPI_AMOLED_PANEL_BUS_QSPI_CONFIG(EXAMPLE_PIN_NUM_LCD_PCLK,
-                                                                 EXAMPLE_PIN_NUM_LCD_DATA0,
-                                                                 EXAMPLE_PIN_NUM_LCD_DATA1,
-                                                                 EXAMPLE_PIN_NUM_LCD_DATA2,
-                                                                 EXAMPLE_PIN_NUM_LCD_DATA3,
-                                                                 EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES * LCD_BIT_PER_PIXEL / 8);
+                                                                      EXAMPLE_PIN_NUM_LCD_DATA0,
+                                                                      EXAMPLE_PIN_NUM_LCD_DATA1,
+                                                                      EXAMPLE_PIN_NUM_LCD_DATA2,
+                                                                      EXAMPLE_PIN_NUM_LCD_DATA3,
+                                                                      EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES * LCD_BIT_PER_PIXEL / 8);
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
     ESP_LOGI(TAG, "Install panel IO");
     esp_lcd_panel_io_handle_t io_handle = NULL;
     esp_lcd_panel_io_spi_config_t io_config = QSPI_AMOLED_PANEL_IO_QSPI_CONFIG(EXAMPLE_PIN_NUM_LCD_CS,
-                                                                                example_notify_lvgl_flush_ready,
-                                                                                &disp_drv);
+                                                                               example_notify_lvgl_flush_ready,
+                                                                               &disp_drv);
 
     io_config.pclk_hz = (unsigned int)AMOLED_QSPI_MAX_PCLK;
     qspi_amoled_vendor_config_t vendor_config = {
@@ -520,21 +538,20 @@ void app_main(void)
 
     // 设置旋转角度
     // disp_drv.rotated = LV_DISP_ROT_90; // 旋转90度
-    
+
     lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
     // Tick interface for LVGL (using esp_timer to generate 2ms periodic event)
     const esp_timer_create_args_t lvgl_tick_timer_args = {
         .callback = &example_increase_lvgl_tick,
-        .name = "lvgl_tick"
-    };
+        .name = "lvgl_tick"};
     esp_timer_handle_t lvgl_tick_timer = NULL;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
 
 #if EXAMPLE_USE_TOUCH
-    static lv_indev_drv_t indev_drv;    // Input device driver (Touch)
+    static lv_indev_drv_t indev_drv; // Input device driver (Touch)
     lv_indev_drv_init(&indev_drv);
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.disp = disp;
@@ -549,15 +566,16 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Display music player UI");
     // Lock the mutex due to the LVGL APIs are not thread-safe
-    if (example_lvgl_lock(-1)) {
+    if (example_lvgl_lock(-1))
+    {
 
         // 创建音乐播放器界面
         music_player_create_ui();
-        
+
         // 设置示例歌曲信息
         // music_player_update_song_info("夜曲", "周杰伦");
         music_player_update_song_info("Hotel California", "Eagles");
-        
+
         // 设置初始播放进度
         music_player_update_progress(0, 180);
 
@@ -565,4 +583,3 @@ void app_main(void)
         example_lvgl_unlock();
     }
 }
-
