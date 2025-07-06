@@ -6,89 +6,111 @@
 #include <vector>
 #include <unordered_set>
 
+
+void autoPlayNextSong();
+
 // 定义音频库需要的回调函数
-void audio_info(const char* info) {
+void audio_info(const char *info)
+{
     Serial.print("Audio Info: ");
     Serial.println(info);
 }
 
-void audio_id3data(const char* info) {
+void audio_id3data(const char *info)
+{
     Serial.print("ID3 Data: ");
     Serial.println(info);
 }
 
-void audio_eof_mp3(const char* info) {
+void audio_eof_mp3(const char *info)
+{
     Serial.print("EOF MP3: ");
     Serial.println(info);
+    autoPlayNextSong();
 }
 
-void audio_showstreamtitle(const char* info) {
+void audio_showstreamtitle(const char *info)
+{
     Serial.print("Stream Title: ");
     Serial.println(info);
 }
 
-void audio_showstation(const char* info) {
+void audio_showstation(const char *info)
+{
     Serial.print("Station: ");
     Serial.println(info);
 }
 
-void audio_bitrate(const char* info) {
+void audio_bitrate(const char *info)
+{
     Serial.print("Bitrate: ");
     Serial.println(info);
 }
 
-void audio_commercial(const char* info) {
+void audio_commercial(const char *info)
+{
     Serial.print("Commercial: ");
     Serial.println(info);
 }
 
-void audio_icyurl(const char* info) {
+void audio_icyurl(const char *info)
+{
     Serial.print("ICY URL: ");
     Serial.println(info);
 }
 
-void audio_icylogo(const char* info) {
+void audio_icylogo(const char *info)
+{
     Serial.print("ICY Logo: ");
     Serial.println(info);
 }
 
-void audio_icydescription(const char* info) {
+void audio_icydescription(const char *info)
+{
     Serial.print("ICY Description: ");
     Serial.println(info);
 }
 
-void audio_lasthost(const char* info) {
+void audio_lasthost(const char *info)
+{
     Serial.print("Last Host: ");
     Serial.println(info);
 }
 
-void audio_eof_speech(const char* info) {
+void audio_eof_speech(const char *info)
+{
     Serial.print("EOF Speech: ");
     Serial.println(info);
 }
 
-void audio_eof_stream(const char* info) {
+void audio_eof_stream(const char *info)
+{
     Serial.print("EOF Stream: ");
     Serial.println(info);
 }
 
-void audio_id3image(File& file, const size_t pos, const size_t size) {
+void audio_id3image(File &file, const size_t pos, const size_t size)
+{
     Serial.printf("ID3 Image: pos=%d, size=%d\n", pos, size);
 }
 
-void audio_oggimage(File& file, std::vector<uint32_t> v) {
+void audio_oggimage(File &file, std::vector<uint32_t> v)
+{
     Serial.print("OGG Image: ");
-    for (auto& val : v) {
+    for (auto &val : v)
+    {
         Serial.printf("%d ", val);
     }
     Serial.println();
 }
 
-void audio_id3lyrics(File& file, const size_t pos, const size_t size) {
+void audio_id3lyrics(File &file, const size_t pos, const size_t size)
+{
     Serial.printf("ID3 Lyrics: pos=%d, size=%d\n", pos, size);
 }
 
-void audio_process_i2s(int16_t* outBuff, int32_t validSamples, bool *continueI2S) {
+void audio_process_i2s(int16_t *outBuff, int32_t validSamples, bool *continueI2S)
+{
     // 这个函数用于处理I2S音频数据，通常用于录音或蓝牙传输
     // 在这里我们不需要做任何处理，所以保持为空
     *continueI2S = true;
@@ -122,7 +144,7 @@ std::unordered_set<int> m_played_songs{};
 
 void stopSongWithMute()
 {
-    audio.setVolume(0);
+    // audio.setVolume(0);
     audio.stopSong();
 }
 
@@ -331,6 +353,7 @@ void setup()
 {
     // pinMode(I2S_WS, OUTPUT);
     // pinMode(4, OUTPUT);
+    pinMode(0, INPUT_PULLUP);
     Serial.begin(115200);
     while (!Serial)
     {
@@ -354,15 +377,119 @@ void setup()
     /* set the i2s pins */
     audio.setPinout(I2S_BCK, I2S_WS, I2S_DOUT, I2S_MCLK);
     audio.setVolume(volume);
+    autoPlayNextSong();
     lvgl_amoled_init();
 }
 
+void handleButton()
+{
+       if (digitalRead(0) == LOW)
+       {
+              while (digitalRead(0) == LOW)
+              {
+                     delay(1);
+              }
+              Serial.println("play next song");
+              startNextSong(true);
+       }
+}
+void parseSerialCommand()
+{
+    if (Serial.available())
+    {
+        Serial.setTimeout(5);
+        String r = Serial.readString();
+        r.trim();
+        if (r.equalsIgnoreCase("n"))
+        {
+            Serial.println("play next song");
+            startNextSong(true);
+        }
+        else if (r.equalsIgnoreCase("r"))
+        {
+            // toggle random shuffle mode
+            shuffle_mode = !shuffle_mode;
+            Serial.printf("shuffle mode: %s\n", shuffle_mode ? "on" : "off");
+        }
+        else if (r.equalsIgnoreCase("s"))
+        {
+            stopSongWithMute();
+            Serial.println("stop song");
+        }
+        else if (r.equalsIgnoreCase("p"))
+        {
+            audio.pauseResume();
+            Serial.println("pause/resume song");
+        }
+        else if (r.equalsIgnoreCase("+") || r.equalsIgnoreCase("="))
+        {
+            volume += 1;
+            if (volume > 21)
+            {
+                volume = 21;
+            }
+            if (volume > 0)
+            {
+                unmute();
+            }
+            audio.setVolume(volume);
+            Serial.printf("volume up: %d\n", volume);
+        }
+        else if (r.equalsIgnoreCase("-"))
+        {
+            volume -= 1;
+            if (volume < 0)
+            {
+                volume = 0;
+            }
+            if (volume == 0)
+            {
+            }
+            audio.setVolume(volume);
+            Serial.printf("volume down: %d\n", volume);
+        }
+        else if (r.equalsIgnoreCase("info"))
+        {
+            Serial.println("Audio info:");
+            Serial.printf("  codec: %s\n", audio.getCodecname());
+            Serial.printf("  sample rate: %d\n", audio.getSampleRate());
+            Serial.printf("  bits per sample: %d\n", audio.getBitsPerSample());
+            Serial.printf("  channels: %d\n", audio.getChannels());
+            Serial.printf("  bitrate: %d\n", audio.getBitRate());
+            Serial.printf("  file size: %d\n", audio.getFileSize());
+            Serial.printf("  file pos: %d\n", audio.getFilePos());
+            Serial.printf("  file duration: %d sec\n", audio.getAudioFileDuration());
+        }
+        else if (r.equalsIgnoreCase("free"))
+        {
+            Serial.printf("free heap=%i, free psram=%i\n", ESP.getFreeHeap(), ESP.getFreePsram());
+        }
+        else if (r.equalsIgnoreCase("list"))
+        {
+            Serial.println("list songs:");
+            for (int i = 0; i < m_songFiles.size(); i++)
+            {
+                Serial.printf("%d: %s\n", i, m_songFiles[i].c_str());
+            }
+        }
+        else if (r.length() > 5)
+        {
+            // put streamURL in serial monitor
+            stopSongWithMute();
+            audio.connecttoFS(MY_SD, r.c_str());
+        }
+        // log_i("free heap=%i", ESP.getFreeHeap());
+    }
+}
 
 void loop()
 {
     static auto t = millis();
+    delay(1);
     audio.loop();
-    autoPlayNextSong();
+    handleButton();
+    // autoPlayNextSong();
+    parseSerialCommand();
     if (millis() - t > 1000)
     {
         t = millis();
