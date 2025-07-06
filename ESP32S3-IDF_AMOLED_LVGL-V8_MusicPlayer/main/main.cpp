@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include "Audio.h" //https://github.com/schreibfaul1/ESP32-audioI2S
+
 extern "C"
 {
     void lvgl_amoled_init(void);
@@ -20,6 +22,6 @@ void loop()
     while (true)
     {
         Serial.println("loop");
-        delay(1000);
+        delay(10000);
     }
 }

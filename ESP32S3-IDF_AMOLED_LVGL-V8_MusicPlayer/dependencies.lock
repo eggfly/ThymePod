@@ -1,4 +1,10 @@
 dependencies:
+  ESP32-audioI2S:
+    dependencies: []
+    source:
+      path: /Users/eggfly/github/eggfly/AM200Q460460LK/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S
+      type: local
+    version: '*'
   chmorgan/esp-libhelix-mp3:
     component_hash: cbb76089dc2c5749f7b470e2e70aedc44c9da519e04eb9a67d4c7ec275229e53
     dependencies:
@@ -481,12 +487,13 @@ dependencies:
       type: service
     version: 8.4.0
 direct_dependencies:
+- ESP32-audioI2S
 - espressif/arduino-esp32
 - espressif/cmake_utilities
 - espressif/esp_lcd_sh8601
 - espressif/esp_lcd_touch
 - idf
 - lvgl/lvgl
-manifest_hash: 6d26aa5ce9254632a33bf974c44a594e699c1729d4a85bebc298ebde399a5153
+manifest_hash: f9b0def5d08418256c181dab4829ae15497a852156b2488fc9231848982469d1
 target: esp32s3
 version: 2.0.0
