@@ -1,3 +1,3 @@
-[submodule "ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S/ESP32-audioI2S"]
-	path = ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S/ESP32-audioI2S
+[submodule "ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S/ESP32-audioI2S"]
+	path = ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S/ESP32-audioI2S
 	url = https://github.com/schreibfaul1/ESP32-audioI2S.git
