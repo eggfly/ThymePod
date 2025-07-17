@@ -6,7 +6,6 @@
 #include <vector>
 #include <unordered_set>
 
-
 void autoPlayNextSong();
 
 // 定义音频库需要的回调函数
@@ -109,11 +108,29 @@ void audio_id3lyrics(File &file, const size_t pos, const size_t size)
     Serial.printf("ID3 Lyrics: pos=%d, size=%d\n", pos, size);
 }
 
+bool diff_mode = false;
+bool bass_mode = false;
+bool treble_mode = false;
+
 void audio_process_i2s(int16_t *outBuff, int32_t validSamples, bool *continueI2S)
 {
     // 这个函数用于处理I2S音频数据，通常用于录音或蓝牙传输
-    // 在这里我们不需要做任何处理，所以保持为空
     *continueI2S = true;
+    if (!diff_mode)
+    {
+        return;
+    }
+    Serial.printf("audio_process_i2s: validSamples=%d\n", validSamples);
+    // 我需要把左右声道做减法，然后输出到I2S，左右声道是一样的结果
+    int16_t diffValue = 0;
+    for (int i = 0; i < validSamples * 2; i += 2)
+    {
+        // 左声道减去右声道，可以模拟实现去人声的效果
+        diffValue = outBuff[i] - outBuff[i + 1];
+        // int16_t - int16_t 结果一定是 int16_t 范围
+        outBuff[i] = diffValue;
+        outBuff[i + 1] = diffValue;
+    }
 }
 
 #define MY_SD SD_MMC
@@ -383,15 +400,15 @@ void setup()
 
 void handleButton()
 {
-       if (digitalRead(0) == LOW)
-       {
-              while (digitalRead(0) == LOW)
-              {
-                     delay(1);
-              }
-              Serial.println("play next song");
-              startNextSong(true);
-       }
+    if (digitalRead(0) == LOW)
+    {
+        while (digitalRead(0) == LOW)
+        {
+            delay(1);
+        }
+        Serial.println("play next song");
+        startNextSong(true);
+    }
 }
 void parseSerialCommand()
 {
@@ -410,6 +427,32 @@ void parseSerialCommand()
             // toggle random shuffle mode
             shuffle_mode = !shuffle_mode;
             Serial.printf("shuffle mode: %s\n", shuffle_mode ? "on" : "off");
+        }
+        else if (r.equalsIgnoreCase("f"))
+        {
+            // play current song again
+            audio.setAudioPlayPosition(0);
+            Serial.println("play current song again");
+        }
+        else if (r.equalsIgnoreCase("d"))
+        {
+            // toggle diff mode
+            diff_mode = !diff_mode;
+            Serial.printf("diff mode: %s\n", diff_mode ? "on" : "off");
+        }
+        else if (r.equalsIgnoreCase("b"))
+        {
+            // toggle bass mode
+            bass_mode = !bass_mode;
+            Serial.printf("bass mode: %s\n", bass_mode ? "on" : "off");
+            audio.setTone(bass_mode ? 6: 0, -1, -4);
+        }
+        else if (r.equalsIgnoreCase("t"))
+        {
+            // toggle treble mode
+            treble_mode = !treble_mode;
+            Serial.printf("treble mode: %s\n", treble_mode ? "on" : "off");
+            audio.setTone(-4, -1, treble_mode ? 6: 0);
         }
         else if (r.equalsIgnoreCase("s"))
         {
@@ -490,9 +533,9 @@ void loop()
     handleButton();
     // autoPlayNextSong();
     parseSerialCommand();
-    if (millis() - t > 1000)
+    if (millis() - t > 100)
     {
         t = millis();
-        Serial.printf("loop, volume=%d\n", audio.getVolume());
+        Serial.printf("loop, volume=%d, duration=%d, uv_level=%d\n", audio.getVolume(), audio.getAudioCurrentTime(), audio.getVUlevel());
     }
 }
