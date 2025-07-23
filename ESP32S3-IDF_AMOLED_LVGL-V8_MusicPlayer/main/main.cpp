@@ -6,6 +6,9 @@
 #include <vector>
 #include <unordered_set>
 
+static const char *TAG = "main";
+
+
 void autoPlayNextSong();
 
 // 定义音频库需要的回调函数
@@ -277,6 +280,11 @@ void startNextSong(bool isNextOrPrev)
 void populateMusicFileList(String path, size_t depth)
 {
     Serial.printf("search: %s, depth=%d\n", path.c_str(), LIST_DIR_RECURSION_DEPTH - depth);
+    // if contains 2019乐队的夏天, then ignore and return
+    if (strstr(path.c_str(), "2019乐队的夏天")) {
+        Serial.println("Ignore 2019乐队的夏天!");
+        return;
+    }
     File musicDir = MY_SD.open(path);
     bool nextFileFound;
     do
@@ -371,6 +379,8 @@ void setup()
     // pinMode(I2S_WS, OUTPUT);
     // pinMode(4, OUTPUT);
     pinMode(0, INPUT_PULLUP);
+    pinMode(41, OUTPUT);
+    digitalWrite(41, HIGH);
     Serial.begin(115200);
     while (!Serial)
     {
@@ -382,6 +392,8 @@ void setup()
     {
         Serial.println("Card Mount Failed");
         return;
+    } else {
+        ESP_LOGI(TAG, "Card Mount OK!");
     }
     auto populateStart = millis();
 
@@ -390,7 +402,7 @@ void setup()
     Serial.printf("PSRAM剩余大小: %d字节\n", ESP.getFreePsram());
     auto cost = millis() - populateStart;
     Serial.printf("populateMusicFileList cost %d ms, keep %d songs, total %d songs\n", cost, m_songFiles.size(), totalSongs);
-
+    ESP_LOGI(TAG, "populateMusicFileList, size=%d\n", totalSongs);
     /* set the i2s pins */
     audio.setPinout(I2S_BCK, I2S_WS, I2S_DOUT, I2S_MCLK);
     audio.setVolume(volume);

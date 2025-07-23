@@ -34,22 +34,22 @@ static SemaphoreHandle_t lvgl_mux = NULL;
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 // 鱼鹰光电屏幕验证底板
-#define EXAMPLE_PIN_NUM_LCD_CS            (GPIO_NUM_46)
-#define EXAMPLE_PIN_NUM_LCD_PCLK          (GPIO_NUM_16)
-#define EXAMPLE_PIN_NUM_LCD_DATA0         (GPIO_NUM_17)
-#define EXAMPLE_PIN_NUM_LCD_DATA1         (GPIO_NUM_18)
-#define EXAMPLE_PIN_NUM_LCD_DATA2         (GPIO_NUM_8)
-#define EXAMPLE_PIN_NUM_LCD_DATA3         (GPIO_NUM_3)
-#define EXAMPLE_PIN_NUM_LCD_RST           (GPIO_NUM_9)
+#define EXAMPLE_PIN_NUM_LCD_CS            (GPIO_NUM_11)
+#define EXAMPLE_PIN_NUM_LCD_PCLK          (GPIO_NUM_12)
+#define EXAMPLE_PIN_NUM_LCD_DATA0         (GPIO_NUM_13)
+#define EXAMPLE_PIN_NUM_LCD_DATA1         (GPIO_NUM_14)
+#define EXAMPLE_PIN_NUM_LCD_DATA2         (GPIO_NUM_15)
+#define EXAMPLE_PIN_NUM_LCD_DATA3         (GPIO_NUM_16)
+#define EXAMPLE_PIN_NUM_LCD_RST           (GPIO_NUM_10)
 
 #define EXAMPLE_USE_TOUCH               1
 
 #if EXAMPLE_USE_TOUCH
 // ESP32S3_AMOLED_触摸
-#define EXAMPLE_PIN_NUM_TOUCH_SCL         (GPIO_NUM_11)
-#define EXAMPLE_PIN_NUM_TOUCH_SDA         (GPIO_NUM_12)
-#define EXAMPLE_PIN_NUM_TOUCH_INT         (GPIO_NUM_13)
-#define EXAMPLE_PIN_NUM_TOUCH_RST         (GPIO_NUM_14)
+#define EXAMPLE_PIN_NUM_TOUCH_SCL         (GPIO_NUM_48)
+#define EXAMPLE_PIN_NUM_TOUCH_SDA         (GPIO_NUM_47)
+#define EXAMPLE_PIN_NUM_TOUCH_INT         (GPIO_NUM_18)
+#define EXAMPLE_PIN_NUM_TOUCH_RST         (GPIO_NUM_21)
 #endif
 
 #define CST816_ID   1
@@ -375,8 +375,26 @@ static void i2c_scan(void)
     ESP_LOGI(TAG, "I2C scan completed.");
 }
 
+#define AMOLED_VCI_EN 17
+void enableAmoledPower() {
+    // 1. 配置GPIO为输出模式
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << AMOLED_VCI_EN),  // 选择目标引脚
+        .mode = GPIO_MODE_OUTPUT,                // 设置为输出模式
+        .pull_up_en = GPIO_PULLUP_DISABLE,       // 禁用上拉
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,    // 禁用下拉
+        .intr_type = GPIO_INTR_DISABLE           // 禁用中断
+    };
+    gpio_config(&io_conf);  // 应用配置
+
+    // 2. 设置高电平
+    gpio_set_level(AMOLED_VCI_EN, 1);  // 输出高电平
+}
+
 void app_main(void)
 {
+    // SET AMOLED POWER EN
+    enableAmoledPower();
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
