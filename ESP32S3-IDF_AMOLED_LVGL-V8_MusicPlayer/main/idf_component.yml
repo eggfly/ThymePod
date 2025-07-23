@@ -15,3 +15,7 @@ dependencies:
   lvgl/lvgl:
     version: ^8
     public: true
+  # FreeType library for LVGL
+  espressif/freetype:
+    version: ^2.13.0
+    public: true

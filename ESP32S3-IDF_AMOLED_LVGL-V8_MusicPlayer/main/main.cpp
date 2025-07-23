@@ -3,6 +3,7 @@
 #include "Audio.h" //https://github.com/schreibfaul1/ESP32-audioI2S
 #include "config.h"
 
+#include "ft2build.h"
 #include <vector>
 #include <unordered_set>
 
