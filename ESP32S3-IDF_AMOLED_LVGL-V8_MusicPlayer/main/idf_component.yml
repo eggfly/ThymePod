@@ -6,9 +6,9 @@ dependencies:
   espressif/arduino-esp32: 3.2.1
   ESP32-audioI2S:
     path: ../components/ESP32-audioI2S
-  esp_lcd_sh8601:
-    version: '*'
-    public: true
+  # esp_lcd_sh8601:
+  #   version: '*'
+  #   public: true
 
   # 78/xiaozhi-fonts: "~1.3.2"
 

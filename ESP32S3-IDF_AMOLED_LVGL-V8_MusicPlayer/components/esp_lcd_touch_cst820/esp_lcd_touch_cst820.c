@@ -177,9 +177,9 @@ static esp_err_t reset(esp_lcd_touch_handle_t tp)
 {
     if (tp->config.rst_gpio_num != GPIO_NUM_NC) {
         ESP_RETURN_ON_ERROR(gpio_set_level(tp->config.rst_gpio_num, tp->config.levels.reset), TAG, "GPIO set level failed");
-        vTaskDelay(pdMS_TO_TICKS(200));
+        vTaskDelay(pdMS_TO_TICKS(10));
         ESP_RETURN_ON_ERROR(gpio_set_level(tp->config.rst_gpio_num, !tp->config.levels.reset), TAG, "GPIO set level failed");
-        vTaskDelay(pdMS_TO_TICKS(200));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 
     return ESP_OK;

@@ -200,7 +200,7 @@ static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
 #define AMOLED_QSPI_MAX_PCLK 20 * 1000 * 1000
 static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
     {0xFE, (uint8_t[]){0x00}, 1, 0},
-    {0x11, (uint8_t[]){0x00}, 0, 120}, // 退出睡眠模式
+    {0x11, (uint8_t[]){0x00}, 0, 1}, // 退出睡眠模式
     {0x35, (uint8_t[]){0x00}, 1, 0},   // 开启撕裂效果
     {0xFE, (uint8_t[]){0x00}, 1, 0},
     {0xC4, (uint8_t[]){0x80}, 1, 0}, // SPI 模式控制
@@ -210,9 +210,9 @@ static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
     {0x63, (uint8_t[]){0xFF}, 1, 0}, // 设置 HBM 模式下的亮度值
     {0x2A, (uint8_t[]){0x00, 0x00, 0x01, 0xBF}, 4, 0},
     {0x2B, (uint8_t[]){0x00, 0x00, 0x01, 0x6F}, 4, 0},
-    {0x29, (uint8_t[]){0x00}, 0, 60}, // 打开显示器
+    {0x29, (uint8_t[]){0x00}, 0, 1}, // 打开显示器
     {0x51, (uint8_t[]){0xFF}, 1, 0},  // 设置正常模式下的亮度值
-    {0x58, (uint8_t[]){0x07}, 1, 10}, // 设置正常模式下的亮度值
+    {0x58, (uint8_t[]){0x07}, 1, 1}, // 设置正常模式下的亮度值
 };
 #else
 #error "Unsupported screen size"

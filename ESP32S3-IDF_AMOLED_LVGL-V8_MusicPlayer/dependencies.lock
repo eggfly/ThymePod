@@ -3,7 +3,7 @@ dependencies:
     dependencies: []
     source:
       path: 
-        /Users/eggfly/github/eggfly/AM200Q460460LK/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S
+        /Users/eggfly/github/eggfly/ThymePod/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S
       type: local
     version: '*'
   chmorgan/esp-libhelix-mp3:
@@ -276,20 +276,6 @@ dependencies:
       registry_url: https://components.espressif.com
       type: service
     version: 1.2.2
-  espressif/esp_lcd_sh8601:
-    component_hash: 9597cce74af4bae0ec423ee819a2916b995ff3e5bb8d590bdb0a27fa9e715dab
-    dependencies:
-    - name: idf
-      require: private
-      version: '>5.0.4,!=5.1.1'
-    - name: espressif/cmake_utilities
-      registry_url: https://components.espressif.com
-      require: private
-      version: 0.*
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 1.0.0
   espressif/esp_lcd_touch:
     component_hash: 779b4ba2464a3ae85681e4b860caa5fdc35801458c23f3039ee761bae7f442a4
     dependencies:
@@ -501,11 +487,10 @@ direct_dependencies:
 - ESP32-audioI2S
 - espressif/arduino-esp32
 - espressif/cmake_utilities
-- espressif/esp_lcd_sh8601
 - espressif/esp_lcd_touch
 - espressif/freetype
 - idf
 - lvgl/lvgl
-manifest_hash: f56ee9d833d273fec7c74f566e7d28475fb31760bc386d9346213de6a9f3a936
+manifest_hash: ad28e07e9d2e3915fc26c791641ecc48c96c950cfa8c6576779883443cccbd60
 target: esp32s3
 version: 2.0.0

@@ -1,6 +1,9 @@
 idf_component_register(
     SRCS "main.cpp" "lvgl_amoled.c" "music_player_ui.c"
     INCLUDE_DIRS ".")
+
+target_add_binary_data(${COMPONENT_TARGET} "../lvgl_fonts/GenSenRounded.ttf" BINARY RENAME_TO "font_ttf")
+
 # 先暂时不需要显式写 REQUIRES espressif__freetype esp_lcd_qspi_amoled
 # 貌似会增加所有依赖，写了反而少，会找不到没写进来的依赖
 

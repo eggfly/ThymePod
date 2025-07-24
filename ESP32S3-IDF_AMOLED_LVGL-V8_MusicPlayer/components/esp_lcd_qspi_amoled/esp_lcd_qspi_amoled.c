@@ -181,7 +181,7 @@ static esp_err_t panel_qspi_amoled_reset(esp_lcd_panel_t *panel)
         gpio_set_level(qspi_amoled->reset_gpio_num, qspi_amoled->flags.reset_level);
         vTaskDelay(pdMS_TO_TICKS(10));
         gpio_set_level(qspi_amoled->reset_gpio_num, !qspi_amoled->flags.reset_level);
-        vTaskDelay(pdMS_TO_TICKS(150));
+        vTaskDelay(pdMS_TO_TICKS(5));
     } else { // Perform software reset
         ESP_RETURN_ON_ERROR(tx_param(qspi_amoled, io, LCD_CMD_SWRESET, NULL, 0), TAG, "send command failed");
         vTaskDelay(pdMS_TO_TICKS(80));
