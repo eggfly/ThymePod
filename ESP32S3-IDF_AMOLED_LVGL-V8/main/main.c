@@ -195,7 +195,7 @@ static SemaphoreHandle_t lvgl_mux = NULL;
   #define EXAMPLE_LCD_X_GAP              10
   #define EXAMPLE_LCD_Y_GAP              0
   #define TOUCH_IC_CONFIG                CST820_ID
-  #define AMOLED_QSPI_MAX_PCLK           20 * 1000 * 1000
+  #define AMOLED_QSPI_MAX_PCLK           60 * 1000 * 1000
   static const qspi_amoled_lcd_init_cmd_t lcd_init_cmds[] = {
     {0xFE, (uint8_t []){0x00}, 1, 0},
     {0x11, (uint8_t []){0x00}, 0, 120},// 退出睡眠模式

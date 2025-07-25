@@ -221,6 +221,11 @@ void autoPlayNextSong()
     }
 }
 
+void setMuxHeadPhoneConnect(bool isConnected)
+{
+    digitalWrite(41, isConnected ? HIGH : LOW);
+}
+
 void startNextSong(bool isNextOrPrev)
 {
     if (m_songFiles.size() == 0)
@@ -264,6 +269,7 @@ void startNextSong(bool isNextOrPrev)
     // walkaround
     // setupButtonsNew();
     audio.connecttoFS(MY_SD, m_songFiles[m_activeSongIdx].c_str());
+    setMuxHeadPhoneConnect(true);
 
     ESP_LOGI(TAG, "%s", m_songFiles[m_activeSongIdx].c_str());
 }
@@ -475,11 +481,6 @@ void lv_example_freetype_1(lv_font_t* font)
     lv_obj_center(label);
 }
 
-void setMuxHeadPhoneConnect(bool isConnected)
-{
-    digitalWrite(41, isConnected ? HIGH : LOW);
-}
-
 void setup()
 {
     lvgl_amoled_init();
@@ -488,8 +489,8 @@ void setup()
     pinMode(0, INPUT_PULLUP);
     pinMode(41, OUTPUT);
     setMuxHeadPhoneConnect(false);
-    // Serial.begin(115200);
-    // 不做Serial.begin是因为Arduino不开串口的时候，板子起不来
+    Serial.begin(115200);
+    // 可以Serial.begin但是不要做下面等待Serial的代码，因为Arduino不开串口的时候，板子起不来
     // while (!Serial)
     // {
     //     ; // wait for serial port to connect
@@ -593,6 +594,32 @@ void parseSerialCommand()
             audio.setAudioPlayPosition(0);
             ESP_LOGI(TAG, "play current song again");
         }
+        else if (r.equalsIgnoreCase("<"))
+        {
+            // play current song again
+            int32_t currentTime = audio.getAudioCurrentTime();
+            ESP_LOGI(TAG, "current time: %d", currentTime);
+            int32_t newTime = currentTime - 10;
+            if (newTime < 0)
+            {
+                newTime = 0;
+            }
+            audio.setAudioPlayPosition(newTime);
+            ESP_LOGI(TAG, "seek current song to %d", newTime);
+        }
+        else if (r.equalsIgnoreCase(">"))
+        {
+            // play current song again
+            int32_t currentTime = audio.getAudioCurrentTime();
+            ESP_LOGI(TAG, "current time: %d", currentTime);
+            int32_t newTime = currentTime + 10;
+            if (newTime > audio.getAudioFileDuration())
+            {
+                newTime = audio.getAudioFileDuration();
+            }
+            audio.setAudioPlayPosition(newTime);
+            ESP_LOGI(TAG, "seek current song to %d", newTime);
+        }
         else if (r.equalsIgnoreCase("d"))
         {
             // toggle diff mode
@@ -691,7 +718,7 @@ void loop()
     audio.loop();
     handleButton();
     // autoPlayNextSong();
-    // parseSerialCommand();
+    parseSerialCommand();
     if (millis() - t > 100)
     {
         t = millis();

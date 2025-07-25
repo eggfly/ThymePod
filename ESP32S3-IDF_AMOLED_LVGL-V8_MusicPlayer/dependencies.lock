@@ -3,7 +3,7 @@ dependencies:
     dependencies: []
     source:
       path: 
-        /Users/eggfly/github/eggfly/ThymePod/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S
+        /Users/eggfly/github/eggfly/ThymePod2/ESP32S3-IDF_AMOLED_LVGL-V8_MusicPlayer/components/ESP32-audioI2S
       type: local
     version: '*'
   chmorgan/esp-libhelix-mp3:
