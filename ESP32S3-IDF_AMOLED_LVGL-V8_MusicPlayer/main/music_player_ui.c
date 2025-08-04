@@ -21,6 +21,8 @@ static lv_obj_t *volume_slider = NULL;
 // 播放状态
 static bool is_playing = false;
 
+extern lv_font_t* custom_font_ttf;
+
 // 播放控制回调函数
 static void play_button_cb(lv_event_t *e)
 {
@@ -121,6 +123,9 @@ void music_player_create_ui(void)
     lv_obj_center(album_cover);
     lv_obj_set_style_text_font(album_cover, &lv_font_simsun_16_cjk, 0);
     lv_obj_set_style_text_color(album_cover, lv_color_hex(0x888888), 0);
+    if (custom_font_ttf) {
+        lv_obj_set_style_text_font(album_cover, custom_font_ttf, 0);
+    }
     lv_label_set_text(album_cover, LV_SYMBOL_AUDIO);
     lv_obj_set_style_text_align(album_cover, LV_TEXT_ALIGN_CENTER, 0);
     
@@ -128,7 +133,10 @@ void music_player_create_ui(void)
     song_title_label = lv_label_create(music_screen);
     lv_obj_set_size(song_title_label, 400, 30);
     lv_obj_align_to(song_title_label, cover_container, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
-    lv_obj_set_style_text_font(song_title_label, &lv_font_simsun_16_cjk, 0);
+    if (custom_font_ttf) {
+        lv_obj_set_style_text_font(song_title_label, custom_font_ttf, 0);
+    }
+    // lv_obj_set_style_text_font(song_title_label, &lv_font_simsun_16_cjk, 0);
     lv_obj_set_style_text_color(song_title_label, lv_color_hex(0xFFFFFF), 0);
     lv_label_set_text(song_title_label, "未知歌曲");
     lv_obj_set_style_text_align(song_title_label, LV_TEXT_ALIGN_CENTER, 0);
@@ -137,8 +145,11 @@ void music_player_create_ui(void)
     artist_label = lv_label_create(music_screen);
     lv_obj_set_size(artist_label, 400, 25);
     lv_obj_align_to(artist_label, song_title_label, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
-    lv_obj_set_style_text_font(artist_label, &lv_font_simsun_16_cjk, 0);
+    // lv_obj_set_style_text_font(artist_label, &lv_font_simsun_16_cjk, 0);
     lv_obj_set_style_text_color(artist_label, lv_color_hex(0x888888), 0);
+    if (custom_font_ttf) {
+        lv_obj_set_style_text_font(artist_label, custom_font_ttf, 0);
+    }
     lv_label_set_text(artist_label, "未知艺术家");
     lv_obj_set_style_text_align(artist_label, LV_TEXT_ALIGN_CENTER, 0);
     

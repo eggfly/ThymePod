@@ -438,6 +438,9 @@ void enableAmoledPower() {
     // 2. 设置高电平
     gpio_set_level(AMOLED_VCI_EN, 1);  // 输出高电平
 }
+
+void lv_example_tiny_ttf_2_from_binary(void);
+
 void lvgl_amoled_init(void)
 {
     // SET AMOLED POWER EN
@@ -585,6 +588,9 @@ void lvgl_amoled_init(void)
     // Lock the mutex due to the LVGL APIs are not thread-safe
     if (example_lvgl_lock(-1))
     {
+
+        lv_example_tiny_ttf_2_from_binary();
+        // ESP_LOGI(TAG, "After lv_example_tiny_ttf_2: internal free heap=%d, psram=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
 
         // 创建音乐播放器界面
         music_player_create_ui();

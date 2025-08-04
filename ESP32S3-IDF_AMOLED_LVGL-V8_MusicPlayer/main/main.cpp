@@ -7,7 +7,7 @@
 #include <vector>
 #include <unordered_set>
 
-// #define USE_BINARY_FONT
+#define USE_BINARY_FONT
 #ifdef USE_BINARY_FONT
 extern const uint8_t _binary_font_ttf_start[] asm("_binary_font_ttf_start");
 extern const size_t _binary_font_ttf_length asm("font_ttf_length");
@@ -15,8 +15,10 @@ extern const size_t _binary_font_ttf_length asm("font_ttf_length");
 
 static const char *TAG = "main";
 
+lv_font_t* custom_font_ttf;
 
 void autoPlayNextSong();
+bool startsWithIgnoreCase(const char *pre, const char *str);
 
 // 定义音频库需要的回调函数
 void audio_info(const char *info)
@@ -24,9 +26,47 @@ void audio_info(const char *info)
     ESP_LOGI(TAG, "Audio Info: %s", info);
 }
 
+char music_title[256] = "";
+char music_album[256] = "";
+char music_artist[256] = "";
+
+extern "C" {
+void music_player_update_song_info(const char *title, const char *artist);
+}
+
 void audio_id3data(const char *info)
 {
+    /*
+I (1377) main: Audio Info: ID3 normal frames
+I (1382) main: ID3 Data: Title: 河北墨麒麟
+I (1387) main: ID3 Data: Album: 冀西南林路行
+I (1392) main: ID3 Data: ContentType: Rock
+I (1397) main: ID3 Data: Year: 2020
+I (1401) main: ID3 Data: Track: 7/8
+I (1412) main: ID3 Data: Artist: 万能青年旅店
+I (1416) main: ID3 Data: Band: 万能青年旅店
+    */
     ESP_LOGI(TAG, "ID3 Data: %s", info);
+    bool needUpdate = false;
+    if (startsWithIgnoreCase("TITLE", info))
+    {
+        strncpy(music_title, info + sizeof("TITLE") + 1, sizeof(music_title) / sizeof(music_title[0]));
+        needUpdate = true;
+    }
+    if (startsWithIgnoreCase("ALBUM", info))
+    {
+        strncpy(music_album, info + sizeof("ALBUM") + 1, sizeof(music_album) / sizeof(music_album[0]));
+        needUpdate = true;
+    }
+    if (startsWithIgnoreCase("ARTIST", info))
+    {
+        strncpy(music_artist, info + sizeof("ARTIST") + 1, sizeof(music_artist) / sizeof(music_artist[0]));
+        needUpdate = true;
+    }
+    if (needUpdate)
+    {
+        music_player_update_song_info(music_title, music_artist);
+    }
 }
 
 void audio_eof_mp3(const char *info)
@@ -435,6 +475,34 @@ lv_font_t* init_freetype_font_from_binary(void)
 }
 #endif
 
+#ifdef USE_BINARY_FONT
+extern "C" {
+void lv_example_tiny_ttf_2_from_binary(void)
+{
+    /*Create style with the new font*/
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_coord_t font_size = 30;
+    custom_font_ttf = lv_tiny_ttf_create_data(_binary_font_ttf_start, _binary_font_ttf_length, font_size);
+    if (custom_font_ttf == NULL) {
+        ESP_LOGE(TAG, "lv_tiny_ttf_create_file return font is NULL");
+        return;
+    }
+    ESP_LOGI(TAG, "font load ok pointer=%p", custom_font_ttf);
+    ESP_LOGI(TAG, "internal free heap=%d, psram=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
+    lv_style_set_text_color(&style, lv_color_hex(0xFFFFFF));
+    lv_style_set_text_font(&style, custom_font_ttf);
+    lv_style_set_text_align(&style, LV_TEXT_ALIGN_CENTER);
+
+    /*Create a label with the new style*/
+    lv_obj_t * label = lv_label_create(lv_scr_act());
+    lv_obj_add_style(label, &style, 0);
+    lv_label_set_text(label, "Hello world\n我是TF卡里面的裸奔TTF字体，使用LVGL渲染，不需要取模，矢量字体，可以任意设置大小\ncreated\nwith Tiny TTF");
+    lv_obj_center(label);
+}
+}
+#endif
+
 void lv_example_tiny_ttf_2(void)
 {
     /*Create style with the new font*/
@@ -554,8 +622,6 @@ void setup()
     // lv_example_freetype_1(custom_font);
     // ESP_LOGI(TAG, "After lv_example_freetype_1: internal free heap=%d, psram=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
 
-    // lv_example_tiny_ttf_2();
-    // ESP_LOGI(TAG, "After lv_example_tiny_ttf_2: internal free heap=%d, psram=%d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), ESP.getFreePsram());
 }
 
 void handleButton()
